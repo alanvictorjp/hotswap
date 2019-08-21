@@ -1,0 +1,95 @@
+#!/bin/bash
+# Script:		Hotswap
+# Revisao:		0.6
+# Desc:			Conecta e Desconecta dispositivos seriais
+# Autor:		Alan Victor
+# Criado:		04/02/2018
+# Modificado:	21/08/2019
+
+
+
+clear
+echo -en "\n\tHOTSWAP\n"
+arg1=$1
+case $arg1 in
+	-s|--scan)
+		a=$(ls /dev/sd[a-z])
+			for portas in $(ls -d /sys/class/scsi_host/host* | sed 's/^.*host//') ; do
+				echo "- - -" > /sys/class/scsi_host/host$portas/scan
+			done
+		b=$(ls /dev/sd[a-z])
+
+
+		for i in $b ; do
+		        saida=$(echo $a | grep -q $i || echo $i)
+		done
+
+		[[ -z $saida ]] && {
+			echo "Nenhum dispositivo a ser levantado!";
+		}||{
+			echo "Dispositivo levantado: $saida"
+			exit 0;
+		}
+	;;
+
+	-d|--delete)
+
+		a=1
+		ls=$(fdisk -l 2> /dev/null | grep '^Disco\|Disk \/dev' | sed 's/,\s[0-9]\{4,\}.*//g')
+		lines=$(echo "$ls" | wc -l)
+
+		echo "$ls" | \
+		while read i ; do
+			echo [ $a ] $i
+			a=$(($a + 1))
+		done
+
+		read -p 'Opção: ' opt
+
+		[[ $opt =~ ^[0-9]$ && $opt -le $lines ]] || { echo "Número invalido!"; exit 0 ; }
+
+		dev=$(echo "$ls" | sed -n "${opt}p" | sed 's/^.*dev\/\(sd[a-z]\).*/\1/')
+
+		[[ -d /sys/block/$dev ]] || {
+			echo 'Dispositivo não conectado!';
+			exit 1;
+		}
+
+		read -p 'Parece tudo pronto para desconectar, Continuar? [S/n]: ' opt
+		[[ -z $opt ]] && opt=s
+
+		case $opt in
+			s|S)
+			umount /dev/${dev}* 2> /dev/null
+			sleep 2
+			echo offline > /sys/block/$dev/device/state && sleep 1 && \
+			echo 1 > /sys/block/$dev/device/delete && \
+			echo 'Dispositivo pode ser removido com segurança!'
+			;;
+
+			*)
+			echo 'Saindo...';
+			exit 0;
+			;;
+		esac
+	;;
+
+	-h|--help|*)
+		clear
+		sc=$(basename $0)
+		echo "
+
+	USO: $sc [argumento]
+	EXEMPLO:
+
+		$sc -s | --scan
+		Levanta dispositivos seriais removidos (hdd, ssd, m2, pendrive, etc).
+
+		$sc -d | --delete
+		Desmonta e remove dispositivos seriais.
+
+		$sc -h | --help
+		Mostra Esse help!
+	"
+		;;
+esac
