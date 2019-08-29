@@ -4,7 +4,7 @@
 # Desc: Conecta e Desconecta dispositivos de armazenamento serial
 # Autor: Alan Victor, alanvictorjp gmail com
 # Criado: 04/02/2018
-# Modificado: 21/08/2019
+# Modificado: 28/08/2019
 
 help='
 	USO: hotswap [argumento]
@@ -24,7 +24,9 @@ clear
 
 echo -en "\n\tHOTSWAP\n"
 
+null=/dev/null
 arg1=$1
+
 case $arg1 in
 	-s|--scan)
 		a=$(ls /dev/sd[a-z])
@@ -41,14 +43,14 @@ case $arg1 in
 		[[ -z $saida ]] && {
 			echo "Nenhum dispositivo a ser levantado!";
 		}||{
-			echo "Dispositivo levantado: $saida"
+			echo "Dispositivo levantado: $saida";
 		}
 	;;
 
 	-d|--delete)
 
 		a=1
-		ls=$(fdisk -l 2> /dev/null | grep '^Disco\|Disk \/dev' | sed 's/,\s[0-9]\{4,\}.*//g')
+		ls=$(fdisk -l 2> $null | grep '\(^Disco\|^Disk\) \/dev' | sed 's/,\s[0-9]\{4,\}.*//g')
 		lines=$(echo "$ls" | wc -l)
 
 		echo "$ls" | \
@@ -59,13 +61,15 @@ case $arg1 in
 
 		read -p 'Opção: ' opt
 
-		[[ $opt =~ ^[0-9]$ && $opt -le $lines ]] || { echo "Opção invalida!"; exit 0 ; }
+		[[ $opt =~ ^[0-9]$ && $opt -le $lines ]] || {
+			echo "Opção invalida!";
+			exit 0;
+		}
 
-		dev=$(echo "$ls" | sed -n "${opt}p" | sed 's/^.*dev\/\(sd[a-z]\).*/\1/')
-
-		[[ -d /sys/block/$dev ]] || {
+#		dev=$(echo "$ls" | sed -n "${opt}p" | sed 's/^.*dev\/\(sd[a-z]\).*/\1/')
+		[[ -d $(echo "$ls" | sed -n "${opt}p" | sed 's/^.*dev\/\(sd[a-z]\).*/\1/') ]] || {
 			echo 'Dispositivo não conectado!';
-			exit;
+			exit 0;
 		}
 
 		read -p 'Parece tudo pronto para desconectar, Continuar? [S/n]: ' opt
@@ -73,7 +77,7 @@ case $arg1 in
 
 		case $opt in
 			s|S)
-			umount /dev/${dev}* 2> /dev/null
+			umount /dev/${dev}* 2> $null
 			sleep 2
 			echo offline > /sys/block/$dev/device/state && sleep 1 && \
 			echo 1 > /sys/block/$dev/device/delete && \
