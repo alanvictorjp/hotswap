@@ -56,7 +56,7 @@ case $arg1 in
 
 		case $opt in
 			s|S)
-			cat /etc/mtab | grep 'sdc[0-9]\{1,\}' |sed 's/\s\+.*//' | \
+			cat /etc/mtab | grep "${dev}[0-9]\{1,\}" |sed 's/\s\+.*//' | \
 			while read line ; do
 				umount $line
 			done
