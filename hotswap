@@ -4,7 +4,9 @@
 # Desc:			Conecta e Desconecta dispositivos de bloco seriais
 # Autor:		Alan Victor / alanvictorjp gmail com
 # Criado:		04/02/2018
-# Modificado:		19/02/2020
+# Modificado:	19/02/2020
+
+
 
 clear
 echo -en "\n\tHOTSWAP\n"
@@ -42,12 +44,12 @@ case $arg1 in
 			a=$(($a + 1))
 		done
 
-		read -p 'Opção: ' opt
-		[[ $opt =~ ^[0-9]$ && $opt -le $lines ]] || { echo "Número invalido!"; exit 0 ; }
+		read -p 'OpÃ§Ã£o: ' opt
+		[[ $opt =~ ^[0-9]$ && $opt -le $lines ]] || { echo "NÃºmero invalido!"; exit 0 ; }
 
 		dev=$(echo "$ls" | sed -n "${opt}p" | sed 's/^.*dev\/\(sd[a-z]\).*/\1/')
 		[[ -d /sys/block/$dev ]] || {
-			echo 'Dispositivo não conectado!';
+			echo 'Dispositivo nÃ£o conectado!';
 			exit 1;
 		}
 
@@ -63,12 +65,12 @@ case $arg1 in
 			sleep 1
 
 			udisksctl power-off -b /dev/$dev &> $null && {
-				echo 'Dispositivo pode ser removido com segurança!';
+				echo 'Dispositivo pode ser removido com seguranÃ§a!';
 
 			}||{
 				echo offline > /sys/block/$dev/device/state && \
 				echo 1 > /sys/block/$dev/device/delete && \
-				echo 'Dispositivo pode ser removido com segurança!';
+				echo 'Dispositivo pode ser removido com seguranÃ§a!';
 			}
 			;;
 
